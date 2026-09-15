@@ -8,11 +8,11 @@ Express + TypeScript REST API skeleton exposing two endpoints:
 ## Tech stack
 
 | Layer         | Choice                          |
-| ------------- | ------------------------------- |
+| ------------- | -------------------------------- |
 | Runtime       | Node.js (>= 20)                 |
 | Language      | TypeScript (strict)             |
 | Framework     | Express 5                       |
-| Validation    | Zod                             |
+| Validation    | Zod                              |
 | Testing       | Vitest + Supertest              |
 | Dev runner    | tsx (watch mode)                |
 | Lint / Format | ESLint (flat config) + Prettier |
@@ -27,39 +27,50 @@ npm run dev
 
 ## Scripts
 
-| Command              | Description                      |
-| -------------------- | -------------------------------- |
-| `npm run dev`        | Start dev server with hot reload |
-| `npm run build`      | Compile `src/` → `dist/`         |
-| `npm start`          | Run the compiled build           |
-| `npm test`           | Run tests once                   |
-| `npm run test:watch` | Run tests in watch mode          |
-| `npm run typecheck`  | Type-check without emitting      |
-| `npm run lint`       | Lint the codebase                |
-| `npm run format`     | Format with Prettier             |
+| Command               | Description                       |
+| ---------------------- | ---------------------------------- |
+| `npm run dev`          | Start dev server with hot reload   |
+| `npm run build`        | Compile `src/` → `dist/`           |
+| `npm start`            | Run the compiled build             |
+| `npm test`             | Run tests once                     |
+| `npm run test:watch`   | Run tests in watch mode            |
+| `npm run typecheck`    | Type-check without emitting        |
+| `npm run lint`         | Lint the codebase                  |
+| `npm run format`       | Format with Prettier               |
 
 ## Project structure
 
 ```text
 src/
-├── app.ts            # Express app factory (no listen — testable)
+├── app.ts             # Express app factory (no listen — testable)
 ├── server.ts          # Entry point: reads PORT, starts HTTP server
 ├── controllers/       # HTTP layer
-├── services/            # Business logic
-├── validators/          # Zod schemas
-├── routes/                # Route definitions
-├── middlewares/           # validate.middleware.ts, error.middleware.ts
-└── types/                  # Shared types
+├── services/          # Business logic
+├── validators/        # Zod schemas
+├── routes/            # Route definitions
+├── middlewares/       # validate.middleware.ts, error.middleware.ts
+└── types/             # Shared types
 
 tests/    # Vitest test suites
-docs/      # ERD / API list
+docs/     # ERD / API list
 ```
 
-Layering: `routes → controllers → services → validators/utils`. No repositories, domain layer, CQRS, unit-of-work, or DI container.
+
+
+## Environments
+
+| Environment | Base URL                   |
+| ----------- | --------------------------- |
+| Local       | `http://localhost:3000`     |
+| Production  | `https://pks.static4j.app`  |
+
+
 
 ## API
 
 ### `POST /schedule/generate`
+
+**Local**
 
 ```bash
 curl -X POST http://localhost:3000/schedule/generate \
@@ -73,6 +84,22 @@ curl -X POST http://localhost:3000/schedule/generate \
   }'
 ```
 
+**Production**
+
+```bash
+curl -X POST https://pks.static4j.app/schedule/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "startDate": "2026-01-01",
+    "totalClasses": 16,
+    "classWeekdays": [1, 3],
+    "holidays": ["2026-04-30", "2026-05-01"],
+    "holidayRanges": [["2026-01-26", "2026-02-05"]]
+  }'
+```
+
+**Response**
+
 ```json
 {
   "endDate": "2026-03-19",
@@ -81,6 +108,8 @@ curl -X POST http://localhost:3000/schedule/generate \
 ```
 
 ### `POST /invoice/calc`
+
+**Local**
 
 ```bash
 curl -X POST http://localhost:3000/invoice/calc \
@@ -94,6 +123,23 @@ curl -X POST http://localhost:3000/invoice/calc \
     "refundPerClass": 40000
   }'
 ```
+
+**Production**
+
+```bash
+curl -X POST https://pks.static4j.app/invoice/calc \
+  -H "Content-Type: application/json" \
+  -d '{
+    "courseType": "MONTHLY",
+    "basePrice": 1500000,
+    "months": 2,
+    "promoCode": "SAVE10",
+    "canceledClasses": 1,
+    "refundPerClass": 40000
+  }'
+```
+
+**Response**
 
 ```json
 {
@@ -133,11 +179,11 @@ curl -X POST http://localhost:3000/invoice/calc \
 
 ## Date & timezone conventions
 
-| Rule               | Value                           |
-| ------------------ | ------------------------------- |
-| Date format        | `YYYY-MM-DD`                    |
-| Timezone           | `Asia/Ho_Chi_Minh`              |
-| Weekday convention | `0 = Monday ... 6 = Sunday`     |
-| `holidayRanges`    | inclusive on both start and end |
+| Rule               | Value                            |
+| ------------------- | --------------------------------- |
+| Date format         | `YYYY-MM-DD`                      |
+| Timezone            | `Asia/Ho_Chi_Minh`                |
+| Weekday convention  | `0 = Monday ... 6 = Sunday`       |
+| `holidayRanges`     | inclusive on both start and end   |
 
 Shared helpers: `src/utils/date.utils.ts` (`isValidDateString`, `toProjectWeekday`).
